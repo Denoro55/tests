@@ -4,15 +4,18 @@ module.exports = {
         "es6": true,
         "jest": true
     },
-    "extends": "eslint:recommended",
+    "extends": "standard",
     "globals": {
         "Atomics": "readonly",
         "SharedArrayBuffer": "readonly"
     },
     "parserOptions": {
-        "ecmaVersion": 2018,
         "sourceType": "module"
     },
     "rules": {
+        "semi": [2, "always"],
+        "no-tabs": 0,
+        "indent": ["error", "tab"],
+        "eol-last": 0
     }
 };
