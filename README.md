@@ -1,0 +1,1 @@
+https://travis-ci.org/Denoro55/tests.svg?branch=master
