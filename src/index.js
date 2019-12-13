@@ -1,7 +1,4 @@
-import concat from './concat.js';
+import concat from './functions/concat.js';
 
-const summ = (a, b) => {
-	return a + b;
-};
-
-export { summ, concat };
+console.log(concat([1, 4], [1, 5]));
+console.log(concat([1, 4], [1, 2], [1, 5, 9]));
