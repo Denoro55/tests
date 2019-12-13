@@ -4,6 +4,8 @@ test:
 	npx jest --colors
 lint:
 	npx eslint .
+fix:
+	npx eslint . --fix
 dev:
 	npm run dev
 build:
