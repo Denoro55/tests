@@ -4,7 +4,9 @@ import Tree from './Tree';
 import Dir from './Dir';
 import File from './File';
 
-const getPathParts = (filepath) => filepath.split(path.sep).filter((part) => part !== '');
+const getPathParts = (filepath) => {
+	return filepath.split(path.sep).filter((part) => part !== '');
+};
 
 class FileSystem {
 	constructor () {
@@ -13,16 +15,35 @@ class FileSystem {
 
 	statSync (filepath) {
 		const current = this.findNode(filepath);
-		if (!current) return false;
+		if (!current) return null;
 		return current.getMeta().getStats();
 	}
 
 	mkdirSync (filepath) {
-		const { dir, base } = path.parse(filepath);
-		if (!this.statSync(dir) || !this.statSync(dir).isDirectory()) {
+		const current = this.findNode(filepath);
+		if (current) {
 			return false;
 		}
-		return this.findNode(dir).addChild(base, new Dir(base));
+		const { base, dir } = path.parse(filepath);
+		const parent = this.findNode(dir);
+		if (!parent || parent.getMeta().isFile()) {
+			return false;
+		}
+		parent.addChild(base, new Dir(base));
+		return true;
+	}
+
+	rmdirSync (filepath) {
+		const { base } = path.parse(filepath);
+		const current = this.findNode(filepath);
+		if (!current) {
+			return false;
+		}
+		if (current.getMeta().isFile() || current.hasChildren()) {
+			return false;
+		}
+		current.getParent().removeChild(base);
+		return true;
 	}
 
 	touchSync (filepath) {
@@ -31,6 +52,26 @@ class FileSystem {
 			return false;
 		}
 		return this.findNode(dir).addChild(base, new File(base));
+	}
+
+	mkdirpSync (filepath) {
+		const current = this.findNode(filepath);
+		if (!current) {
+			const { dir } = path.parse(filepath);
+			this.mkdirpSync(dir);
+		} else if (current.getMeta().isFile()) {
+			return false;
+		}
+		return this.mkdirSync(filepath);
+	}
+
+	readdirSync (filepath) {
+		const current = this.findNode(filepath);
+		if (!current || current.getMeta().isFile()) {
+			return false;
+		}
+		return current.getChildren()
+			.map((child) => child.getKey());
 	}
 
 	findNode (filepath) {
