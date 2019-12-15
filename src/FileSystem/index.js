@@ -5,12 +5,13 @@ import Dir from './Dir';
 import File from './File';
 
 const getPathParts = (filepath) => {
-	return filepath.split(path.sep).filter((part) => part !== '');
+	const crossPath = path.join(filepath);
+	return crossPath.split(path.sep).filter((part) => part !== '' && part !== '.');
 };
 
 class FileSystem {
 	constructor () {
-		this.tree = new Tree('\\', new Dir('\\'));
+		this.tree = new Tree('/', new Dir('/'));
 	}
 
 	statSync (filepath) {
