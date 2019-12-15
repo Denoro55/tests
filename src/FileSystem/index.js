@@ -1,5 +1,6 @@
 import path from 'path';
 import Tree from './Tree';
+import errors from 'errno';
 
 import Dir from './Dir';
 import File from './File';
@@ -18,6 +19,44 @@ class FileSystem {
 		const current = this.findNode(filepath);
 		if (!current) return null;
 		return current.getMeta().getStats();
+	}
+
+	unlinkSync (filepath) {
+		const current = this.findNode(filepath);
+		if (!current) {
+			return [null, errors.code.ENOENT];
+		}
+		if (current.getMeta().isDirectory()) {
+			return [null, errors.code.EPERM];
+		}
+		return [current.getParent().removeChild(current.getKey()), null];
+	}
+
+	writeFileSync (filepath, body) {
+		const { base, dir } = path.parse(filepath);
+		const parent = this.findNode(dir);
+		if (!parent) {
+			return [null, errors.code.ENOENT];
+		}
+		if (parent.getMeta().isFile()) {
+			return [null, errors.code.ENOTDIR];
+		}
+		const current = parent.getChild(base);
+		if (current && current.getMeta().isDirectory()) {
+			return [null, errors.code.EISDIR];
+		}
+		return [parent.addChild(base, new File(base, body)), null];
+	}
+
+	readFileSync (filepath) {
+		const current = this.findNode(filepath);
+		if (!current) {
+			return [null, errors.code.ENOENT];
+		}
+		if (current.getMeta().isDirectory()) {
+			return [null, errors.code.EISDIR];
+		}
+		return [current.getMeta().getBody(), null];
 	}
 
 	mkdirSync (filepath) {
@@ -67,13 +106,24 @@ class FileSystem {
 	}
 
 	readdirSync (filepath) {
-		const current = this.findNode(filepath);
-		if (!current || current.getMeta().isFile()) {
-			return false;
+		const dir = this.findNode(filepath);
+		if (!dir) {
+			return [null, errors.code.ENOENT];
 		}
-		return current.getChildren()
-			.map((child) => child.getKey());
+		if (dir.getMeta().isFile()) {
+			return [null, errors.code.ENOTDIR];
+		}
+		return [dir.getChildren().map((child) => child.getKey()), null];
 	}
+
+	// readdirSync (filepath) {
+	// 	const current = this.findNode(filepath);
+	// 	if (!current || current.getMeta().isFile()) {
+	// 		return false;
+	// 	}
+	// 	return current.getChildren()
+	// 		.map((child) => child.getKey());
+	// }
 
 	findNode (filepath) {
 		const parts = getPathParts(filepath);
