@@ -1,5 +1,4 @@
 import FileSystem from '../../src/FileSystem';
-import path from 'path';
 
 // describe('FileSystem', () => {
 // 	let tree;
