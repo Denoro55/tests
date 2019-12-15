@@ -1,87 +1,6 @@
 import FileSystem from '../../src/FileSystem';
 
-// describe('FileSystem', () => {
-// 	let tree;
-
-// 	beforeEach(() => {
-// 		tree = new FileSystem();
-// 	});
-
-// 	it('#mkdirSync', () => {
-// 		expect(tree.isDirectory('etc')).toBe(false);
-
-// 		tree.mkdirSync('etc');
-// 		expect(tree.isDirectory('etc')).toBe(true);
-// 	});
-
-// 	it('#mkdirSync2', () => {
-// 		expect(tree.isDirectory('//etc//one')).toBe(false);
-
-// 		tree.mkdirSync('//etc//one');
-// 		expect(tree.isDirectory('//etc//one')).toBe(false);
-// 	});
-
-// 	it('#mkdirSync3', () => {
-// 		expect(tree.isDirectory('//etc')).toBe(false);
-
-// 		tree.mkdirSync('////etc');
-// 		expect(tree.isDirectory('//etc//')).toBe(true);
-
-// 		tree.mkdirSync('//////etc//nginx');
-// 		expect(tree.isDirectory('//etc////nginx')).toBe(true);
-// 		expect(tree.isDirectory('//etc////nginx//two')).toBe(false);
-
-// 		tree.mkdirSync('//////etc//nginx//two');
-// 		expect(tree.isDirectory('//etc//nginx//two')).toBe(true);
-// 	});
-
-// 	it('#touchSync', () => {
-// 		expect(tree.isFile('file.txt')).toBe(false);
-// 		tree.touchSync('file.txt');
-// 		expect(tree.isFile('file.txt')).toBe(true);
-
-// 		expect(tree.isFile('src//file')).toBe(false);
-// 		tree.touchSync('src//file');
-// 		expect(tree.isFile('src//file')).toBe(false);
-
-// 		expect(tree.isFile('file.txt//package')).toBe(false);
-// 		tree.touchSync('file.txt//package');
-// 		expect(tree.isFile('file.txt//package')).toBe(false);
-// 	});
-
-// 	it('#mkdirSync', () => {
-// 		tree.mkdirSync('//etc');
-// 		expect(tree.statSync('//etc').isDirectory()).toBeTruthy();
-
-// 		tree.mkdirSync('//etc//nginx');
-// 		expect(tree.statSync('//etc//nginx').isDirectory()).toBeTruthy();
-// 	});
-
-// 	it('#mkdirSync2', () => {
-// 		tree.mkdirSync('/var/');
-// 		expect(tree.statSync('//var/').isDirectory()).toBeTruthy();
-// 		expect(tree.statSync('//var').isDirectory()).toBeTruthy();
-
-// 		tree.mkdirSync('//var//log//');
-// 		expect(tree.statSync('//var//log').isDirectory()).toBeTruthy();
-// 		expect(tree.statSync('//var//////log').isDirectory()).toBeTruthy();
-// 	});
-
-// 	it('#touchSync', () => {
-// 		tree.touchSync('//file.txt');
-// 		expect(tree.statSync('//file.txt').isFile()).toBeTruthy();
-
-// 		tree.mkdirSync('//etc');
-// 		tree.touchSync('//etc//bashrc');
-// 		expect(tree.statSync('//etc//bashrc').isFile()).toBeTruthy();
-// 	});
-
-// 	it('#touchSync2', () => {
-// 		tree.touchSync('//modernfile//modernfile');
-// 	});
-// });
-
-describe('FileSystem2', () => {
+describe('FileSystem', () => {
 	let tree;
 
 	beforeEach(() => {
@@ -89,62 +8,98 @@ describe('FileSystem2', () => {
 	});
 
 	it('#mkdirSync', () => {
-		expect(tree.statSync('etc')).toBe(null);
+		expect(() => tree.statSync('etc')).toThrow(/ENOENT/);
+
 		tree.mkdirSync('etc');
-		expect(tree.statSync('/etc').isDirectory()).toBe(true);
+		expect(tree.statSync('etc').isDirectory()).toBe(true);
+	});
+
+	it('#mkdirSync2', () => {
+		expect(() => tree.statSync('//etc//one')).toThrow(/ENOENT/);
+
+		expect(() => tree.mkdirSync('//etc//one')).toThrow(/ENOTDIR/);
+	});
+
+	it('#mkdirSync3', () => {
+		expect(() => tree.statSync('//etc')).toThrow(/ENOENT/);
+
+		tree.mkdirSync('////etc');
+		expect(tree.statSync('//etc//').isDirectory()).toBe(true);
+
+		tree.mkdirSync('//////etc//nginx');
+		expect(tree.statSync('//etc////nginx').isDirectory()).toBe(true);
+
+		expect(() => tree.statSync('//etc////nginx//two')).toThrow(/ENOENT/);
+
+		tree.mkdirSync('//////etc////nginx//two');
+		expect(tree.statSync('//etc//nginx//two').isDirectory()).toBe(true);
+	});
+
+	it('#touchSync', () => {
+		expect(() => tree.statSync('file.txt')).toThrow(/ENOENT/);
+		tree.touchSync('file.txt');
+
+		expect(tree.statSync('file.txt').isFile()).toBe(true);
+
+		expect(() => tree.statSync('src//file')).toThrow(/ENOENT/);
+		expect(() => tree.touchSync('src//file')).toThrow(/ENOENT/);
+
+		expect(() => tree.statSync('file.txt//package')).toThrow(/ENOENT/);
+		expect(() => tree.touchSync('file.txt//package')).toThrow(/ENOTDIR/);
 	});
 });
 
-// describe('FileSystem3', () => {
-// 	let files;
+describe('FileSystem2', () => {
+	let files;
 
-// 	beforeEach(() => {
-// 		files = new FileSystem();
-// 		files.mkdirSync('/etc');
-// 		files.mkdirSync('/opt');
-// 		files.mkdirSync('/etc/nginx');
-// 	});
+	beforeEach(() => {
+		files = new FileSystem();
+		files.mkdirSync('/etc');
+		files.mkdirSync('/opt');
+		files.mkdirSync('/etc/nginx');
+	});
 
-// 	it('hexletFs', () => {
-// 		expect(files.mkdirSync('/opt/folder/inner')).toBe(false);
-// 		expect(files.statSync('/opt').isDirectory()).toBe(true);
-// 		expect(files.statSync('/etc/unknown')).toBe(null);
+	it('#sync', () => {
+		expect(() => files.mkdirSync('/opt/folder/inner')).toThrow(/ENOTDIR/);
+		expect(files.statSync('/opt').isDirectory()).toBe(true);
+		expect(() => files.statSync('/etc/unknown')).toThrow(/ENOENT/);
 
-// 		files.touchSync('/opt/file.txt');
-// 		files.touchSync('/etc/nginx/nginx.conf');
-// 		expect(files.statSync('/etc/nginx').isDirectory()).toBe(true);
-// 		expect(files.statSync('/etc/nginx').isFile()).toBe(false);
-// 		expect(files.statSync('/etc/nginx/nginx.conf').isDirectory()).toBe(false);
-// 		expect(files.statSync('/etc/nginx/nginx.conf').isFile()).toBe(true);
-// 		expect(files.mkdirSync('/etc/nginx/nginx.conf/wrong')).toBe(false);
+		files.touchSync('/opt/file.txt');
+		files.touchSync('/etc/nginx/nginx.conf');
+		expect(files.statSync('/etc/nginx').isDirectory()).toBe(true);
 
-// 		expect(files.touchSync('/etc/nginx/nginx.conf/wrong')).toBe(false);
-// 		expect(files.touchSync('/opt/folder/inner')).toBe(false);
-// 		expect(files.statSync('/opt/file.txt').isFile()).toBe(true);
+		expect(files.statSync('/etc/nginx').isFile()).toBe(false);
+		expect(files.statSync('/etc/nginx/nginx.conf').isDirectory()).toBe(false);
+		expect(files.statSync('/etc/nginx/nginx.conf').isFile()).toBe(true);
+		expect(() => files.mkdirSync('/etc/nginx/nginx.conf/wrong')).toThrow(/ENOTDIR/);
 
-// 		files.mkdirpSync('/etc/nginx/conf.d');
-// 		files.mkdirpSync('/usr/admin/docs');
-// 		expect(files.readdirSync('/usr/admin/docs')).toEqual([[], null]);
-// 		expect(files.statSync('/etc/nginx/conf.d').isDirectory()).toBe(true);
-// 		expect(files.mkdirpSync('/etc/nginx/nginx.conf/wrong')).toBe(false);
+		expect(() => files.touchSync('/etc/nginx/nginx.conf/wrong')).toThrow(/ENOTDIR/);
+		expect(() => files.touchSync('/opt/folder/inner')).toThrow(/ENOENT/);
+		expect(files.statSync('/opt/file.txt').isFile()).toBe(true);
 
-// 		expect(files.readdirSync('/etc/nginx')).toEqual([['nginx.conf', 'conf.d'], null]);
-// 		expect(files.readdirSync('/')).toEqual([['etc', 'opt', 'usr'], null]);
-// 		expect(files.readdirSync('/etc/nginx/undefined')).toBe(false);
-// 		expect(files.readdirSync('/etc/nginx/nginx.conf')).toBe(false);
+		files.mkdirpSync('/etc/nginx/conf.d');
+		files.mkdirpSync('/usr/admin/docs');
+		expect(files.readdirSync('/usr/admin/docs')).toEqual([]);
+		expect(files.statSync('/etc/nginx/conf.d').isDirectory()).toBe(true);
+		expect(() => files.mkdirpSync('/etc/nginx/nginx.conf/wrong')).toThrow(/ENOTDIR/);
 
-// 		files.rmdirSync('/etc/nginx/conf.d');
-// 		expect(files.readdirSync('/etc/nginx')).toEqual([['nginx.conf'], null]);
+		expect(files.readdirSync('/etc/nginx')).toEqual(['nginx.conf', 'conf.d']);
+		expect(files.readdirSync('/')).toEqual(['etc', 'opt', 'usr']);
+		expect(() => files.readdirSync('/etc/nginx/undefined')).toThrow(/ENOENT/);
+		expect(() => files.readdirSync('/etc/nginx/nginx.conf')).toThrow(/ENOTDIR/);
 
-// 		expect(files.rmdirSync('/etc/unknown')).toBe(false);
-// 		expect(files.rmdirSync('/etc/nginx')).toBe(false);
+		files.rmdirSync('/etc/nginx/conf.d');
+		expect(files.readdirSync('/etc/nginx')).toEqual(['nginx.conf']);
 
-// 		expect(files.rmdirSync('/etc/nginx/nginx.conf')).toBe(false);
+		expect(() => files.rmdirSync('/etc/unknown')).toThrow(/ENOENT/);
+		expect(() => files.rmdirSync('/etc/nginx')).toThrow(/EISDIR/);
 
-// 		files.rmdirSync('/usr/admin/docs');
-// 		expect(files.readdirSync('/usr/admin/docs')).toBe(false);
-// 	});
-// });
+		expect(() => files.rmdirSync('/etc/nginx/nginx.conf')).toThrow(/ENOTDIR/);
+
+		files.rmdirSync('/usr/admin/docs');
+		expect(() => files.readdirSync('/usr/admin/docs')).toThrow(/ENOENT/);
+	});
+});
 
 describe('FS', () => {
 	let files;
@@ -158,56 +113,82 @@ describe('FS', () => {
 	});
 
 	it('#writeFileSync', () => {
-		const [data, err] = files.writeFileSync('/etc/unknown/file', 'body');
-		expect(data).toBe(null);
-		expect(err.code).toBe('ENOENT');
-
-		const [data2, err2] = files.writeFileSync('/etc', 'body');
-		expect(data2).toBe(null);
-		expect(err2.code).toBe('EISDIR');
-
-		const [data3, err3] = files.writeFileSync('/opt/file.txt/wrong', 'body');
-		expect(data3).toBe(null);
-		expect(err3.code).toBe('ENOTDIR');
+		expect(() => files.writeFileSync('/etc/unknown/file', 'body')).toThrow(/ENOENT/);
+		expect(() => files.writeFileSync('/etc', 'body')).toThrow(/EISDIR/);
+		expect(() => files.writeFileSync('/opt/file.txt/wrong', 'body')).toThrow(/ENOENT/);
 	});
 
 	it('#readFileSync', () => {
 		files.writeFileSync('/etc/nginx/nginx.conf', 'directives');
-		const [data, err] = files.readFileSync('/etc/nginx/nginx.conf');
-		expect(data).toBe('directives');
-		expect(err).toBe(null);
 
-		const [data2, err2] = files.readFileSync('/etc/nginx');
-		expect(data2).toBe(null);
-		expect(err2.code).toBe('EISDIR');
-
-		const [data3, err3] = files.readFileSync('/etc/unknown');
-		expect(data3).toBe(null);
-		expect(err3.code).toBe('ENOENT');
+		expect(files.readFileSync('/etc/nginx/nginx.conf')).toBe('directives');
+		expect(() => files.readFileSync('/etc/nginx')).toThrow(/EISDIR/);
+		expect(() => files.readFileSync('/etc/unknown')).toThrow(/ENOENT/);
 	});
 
 	it('#unlinkSync', () => {
 		files.writeFileSync('/etc/nginx/nginx.conf', 'directives');
 		files.unlinkSync('/etc/nginx/nginx.conf');
-		const [data, err] = files.readdirSync('/etc/nginx');
-		expect(err).toBe(null);
-		expect(data).toEqual(['conf.d']);
 
-		const [data2, err2] = files.unlinkSync('/etc/nginx');
-		expect(data2).toBe(null);
-		expect(err2.code).toBe('EPERM');
-
-		const [data3, err3] = files.unlinkSync('/etc/nginx/unexist.file');
-		expect(data3).toBe(null);
-		expect(err3.code).toBe('ENOENT');
+		expect(files.readdirSync('/etc/nginx')).toEqual(['conf.d']);
+		expect(() => files.unlinkSync('/etc/nginx')).toThrow(/EPERM/);
+		expect(() => files.unlinkSync('/etc/nginx/unexist.file')).toThrow(/ENOENT/);
 	});
 
 	it('#writeFileSync&readFileSync', () => {
-		const [data, err] = files.writeFileSync('/opt/another-file.txt', 'body');
-		expect(data.getMeta().getName()).toBe('another-file.txt');
-		expect(err).toBe(null);
-		const [data2, err2] = files.readFileSync('/opt/another-file.txt');
-		expect(data2).toBe('body');
-		expect(err2).toBe(null);
+		expect(files.writeFileSync('/opt/another-file.txt', 'body').getMeta().getName()).toBe('another-file.txt');
+		expect(files.readFileSync('/opt/another-file.txt')).toBe('body');
+	});
+});
+
+describe('FS2', () => {
+	let files;
+
+	beforeEach(() => {
+		files = new FileSystem();
+		files.mkdirpSync('/etc/nginx');
+		files.mkdirpSync('/opt');
+		files.touchSync('/opt/file.txt');
+		files.mkdirpSync('/etc/nginx/conf.d');
+		files.touchSync('/etc/nginx/nginx.conf');
+	});
+
+	it('#copySync', () => {
+		expect(() => files.copySync('undefined', '/etc'))
+			.toThrow(/ENOENT/);
+
+		expect(() => files.copySync('/opt', '/etc')).toThrow(/EISDIR/);
+
+		expect(() => files.copySync('/op/file.txt', '/etc/file.txt/inner'))
+			.toThrow(/ENOENT/);
+
+		expect(() => files.copySync('/opt/file.txt', '/etc/undefined/inner'))
+			.toThrow(/ENOENT/);
+
+		files.copySync('/opt/file.txt', '/etc');
+		expect(files.statSync('/etc/file.txt').isFile()).toBeTruthy();
+
+		files.copySync('/opt/file.txt', '/etc/nginx/nginx.conf');
+		expect(files.readFileSync('/etc/nginx/nginx.conf')).toBe('');
+	});
+
+	it('#copySync2', () => {
+		files.writeFileSync('/opt/file.txt', 'body');
+		files.copySync('/opt/file.txt', '/etc/nginx/nginx.conf');
+		expect(files.readFileSync('/etc/nginx/nginx.conf')).toBe('body');
+
+		files.copySync('/opt/file.txt', '/etc');
+		expect(files.readFileSync('/etc/file.txt')).toBe('body');
+
+		files.copySync('/opt/file.txt', '/opt/newfile');
+		expect(files.readFileSync('/opt/newfile')).toBe('body');
+	});
+
+	it('#copySync3', () => {
+		files.mkdirpSync('/etc/nginx/conf.d');
+		files.touchSync('/etc/nginx/nginx.conf');
+		files.writeFileSync('/opt/file.txt', 'body');
+		expect(() => files.copySync('/opt/file.txt', '/etc/nginx/nginx.conf/testFile'))
+			.toThrow(/ENOENT/);
 	});
 });
