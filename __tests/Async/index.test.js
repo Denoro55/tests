@@ -212,7 +212,7 @@ it('#reverse', () => {
 });
 
 it('#getTypes', () => {
-	const promise = getTypes(['./Makefile', './dist', './.babelrc']);
+	const promise = getTypes(['./Makefile', './src', './.babelrc']);
 	return expect(promise).resolves.toEqual(['file', 'directory', 'file']);
 });
 
