@@ -2,7 +2,7 @@ import os from 'os';
 import fs from 'fs';
 import path from 'path';
 
-import { readFile, writeFile, compareFileSizes, move, watch, reverse, getTypes, getDirectorySize } from '../../src/Async';  // eslint-disable-line
+import { readFile, writeFile, compareFileSizes, move, watch, reverse, getTypes, getDirectorySize, timer, exchange } from '../../src/Async';  // eslint-disable-line
 
 describe('Async', () => {
 	// it('#readFile', (done) => {
@@ -226,4 +226,32 @@ describe('getDirectorySize', () => {
 		const promise = getDirectorySize('./files');
 		return expect(promise).resolves.toBe(98);
 	});
+});
+
+it('#timer', () => {
+	const before = new Date();
+	const startTime = before.getTime();
+	const duration = 150;
+	return timer(duration).then(() => {
+		const after = new Date();
+		const endTime = after.getTime();
+		const difference = endTime - startTime;
+		expect(difference).toBeGreaterThanOrEqual(duration);
+		expect(difference).toBeLessThan(duration + 30);
+	});
+});
+
+it('#exchange', async () => {
+	const firstPath = `${os.tmpdir()}/first`;
+	const secondPath = `${os.tmpdir()}/second`;
+	const firstContent = 'content1';
+	const secondContent = 'content2';
+	await fs.promises.writeFile(firstPath, firstContent);
+	await fs.promises.writeFile(secondPath, secondContent);
+	await exchange(firstPath, secondPath);
+
+	const result1 = await fs.promises.readFile(firstPath, 'utf-8');
+	expect(result1).toBe(secondContent);
+	const result2 = await fs.promises.readFile(secondPath, 'utf-8');
+	expect(result2).toBe(firstContent);
 });

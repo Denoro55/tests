@@ -105,4 +105,20 @@ const getDirectorySize = (dirpath) => {
 		.catch(e => { throw e; });
 };
 
-export { readFile, writeFile, compareFileSizes, move, watch, reverse, getTypes, getDirectorySize };
+const timer = (time) => {
+	return new Promise((resolve, reject) => {
+		setTimeout(() => {
+			resolve();
+		}, time);
+	});
+};
+
+const exchange = async (file1, file2) => {
+	const content1 = fs.promises.readFile(file1, 'utf-8');
+	const content2 = fs.promises.readFile(file2, 'utf-8');
+	const [data1, data2] = await Promise.all([content1, content2]);
+	await fs.promises.writeFile(file1, data2);
+	await fs.promises.writeFile(file2, data1);
+};
+
+export { readFile, writeFile, compareFileSizes, move, watch, reverse, getTypes, getDirectorySize, timer, exchange };
