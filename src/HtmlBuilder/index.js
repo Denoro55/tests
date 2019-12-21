@@ -1,5 +1,5 @@
 import { identity } from 'lodash';
-import buildNode from './buildNode';
+import buildNode from './BuildNode';
 
 const propertyActions = [
 	{
